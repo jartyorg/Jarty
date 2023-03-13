@@ -6,20 +6,29 @@ import 'package:flutter/services.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:jarty/models/clipboard_history.dart';
 import 'package:jarty/pages/clipboard/main.dart';
-import 'package:jarty/utils/isarUtil.dart';
+import 'package:jarty/pages/home/main.dart';
+import 'package:jarty/plugin/floating_window/floating_window.dart';
+import 'package:jarty/plugin/floating_window/window_controller.dart';
+import 'package:jarty/utils/isar_util.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
 
-void main() async {
-  await _initWindowsManger();
-  await _initHotKey();
-  await _initTray();
+void main(List<String> args) async {
+  WidgetsFlutterBinding.ensureInitialized();
   await IsarUtil.instance.init();
-  runApp(const MyApp());
+  if (args.isNotEmpty && args.first == "floating_window") {
+    final windowId = int.parse(args[1]);
+    runApp(ClipboardPage(
+        windowController: WindowController.fromWindowId(windowId)));
+  } else {
+    await _initHotKey();
+    await _initWindowsManger();
+    await _initTray();
+    runApp(const MyApp());
+  }
 }
 
 Future<void> _initWindowsManger() async {
-  WidgetsFlutterBinding.ensureInitialized();
   // Must add this line.
   await windowManager.ensureInitialized();
 
@@ -65,8 +74,13 @@ Future<void> _initHotKey() async {
   await hotKeyManager.register(
     clipboardHistoryKey,
     keyDownHandler: (hotKey) async {
-      await windowManager.show();
-      await windowManager.focus();
+      final window = await FloatingWindow.createWindow();
+      window
+        ..setFrame(const Offset(0, 0) & const Size(633, 463))
+        ..center()
+        ..show();
+      // await windowManager.show();
+      // await windowManager.focus();
     },
     // Only works on macOS.
     keyUpHandler: (hotKey) {},
@@ -80,7 +94,8 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> with ClipboardListener, TrayListener ,WindowListener{
+class _MyAppState extends State<MyApp>
+    with ClipboardListener, TrayListener, WindowListener {
   @override
   void initState() {
     // TODO: implement initState
@@ -119,7 +134,9 @@ class _MyAppState extends State<MyApp> with ClipboardListener, TrayListener ,Win
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const ClipboardPage(),
+      home: const MyHomePage(
+        title: "1111",
+      ),
     );
   }
 

@@ -5,12 +5,16 @@ import 'package:flutter/services.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:isar/isar.dart';
 import 'package:jarty/models/clipboard_history.dart';
+import 'package:jarty/plugin/floating_window/window_controller.dart';
 import 'package:jarty/utils/debounce.dart';
-import 'package:jarty/utils/isarUtil.dart';
+import 'package:jarty/utils/isar_util.dart';
 import 'package:window_manager/window_manager.dart';
 
 class ClipboardPage extends StatefulWidget {
-  const ClipboardPage({Key? key}) : super(key: key);
+  const ClipboardPage({Key? key, required this.windowController})
+      : super(key: key);
+
+  final WindowController windowController;
 
   @override
   State<ClipboardPage> createState() => _ClipboardPageState();
@@ -79,8 +83,6 @@ class _ClipboardPageState extends State<ClipboardPage> {
 
   @override
   void initState() {
-    windowManager.setResizable(false);
-    windowManager.setOpacity(0.97);
     _keyBordFocusNode.requestFocus();
     _initHotKey();
     IsarUtil.instance.isar.clipboardHistorys
@@ -141,144 +143,146 @@ class _ClipboardPageState extends State<ClipboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return RawKeyboardListener(
-      onKey: (event) {
-        if (event is RawKeyDownEvent) {
-          if (_scrollController.position.isScrollingNotifier.value == false) {
-            if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-              _selectListItem(_selectIndex - 1);
-            } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-              _selectListItem(_selectIndex + 1);
-            } else if (event.logicalKey == LogicalKeyboardKey.enter) {
-              setClipboardData(_selectIndex);
+    return MaterialApp(
+      home: RawKeyboardListener(
+        onKey: (event) {
+          if (event is RawKeyDownEvent) {
+            if (_scrollController.position.isScrollingNotifier.value == false) {
+              if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+                _selectListItem(_selectIndex - 1);
+              } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+                _selectListItem(_selectIndex + 1);
+              } else if (event.logicalKey == LogicalKeyboardKey.enter) {
+                setClipboardData(_selectIndex);
+              }
             }
           }
-        }
-      },
-      focusNode: _keyBordFocusNode,
-      child: Scaffold(
-          body: Container(
-        decoration: BoxDecoration(boxShadow: [
-          BoxShadow(
-              color: Colors.grey[200]!,
-              offset: const Offset(1, 1),
-              spreadRadius: 40)
-        ]),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: TextField(
-                onChanged: (text) {
-                  inputDebounce.run(() {
-                    IsarUtil.instance.isar.clipboardHistorys
-                        .filter()
-                        .contentContains(text)
-                        .sortByCreateTimeDesc()
-                        .findAll()
-                        .then((value) => setState(() {
-                              _histories = value;
-                            }));
-                  });
-                },
-                style: const TextStyle(color: Colors.black),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.grey[350],
-                  hintStyle: TextStyle(color: Colors.grey[400]),
-                  border: const OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: const OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: const OutlineInputBorder(
-                    borderSide: BorderSide.none,
+        },
+        focusNode: _keyBordFocusNode,
+        child: Scaffold(
+            body: Container(
+          decoration: BoxDecoration(boxShadow: [
+            BoxShadow(
+                color: Colors.grey[200]!,
+                offset: const Offset(1, 1),
+                spreadRadius: 40)
+          ]),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: TextField(
+                  onChanged: (text) {
+                    inputDebounce.run(() {
+                      IsarUtil.instance.isar.clipboardHistorys
+                          .filter()
+                          .contentContains(text)
+                          .sortByCreateTimeDesc()
+                          .findAll()
+                          .then((value) => setState(() {
+                                _histories = value;
+                              }));
+                    });
+                  },
+                  style: const TextStyle(color: Colors.black),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey[350],
+                    hintStyle: TextStyle(color: Colors.grey[400]),
+                    border: const OutlineInputBorder(
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
               ),
-            ),
-            Expanded(
-              child: Padding(
-                padding:
-                    const EdgeInsets.only(bottom: 25.0, left: 10, right: 10),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                        child: ListView.builder(
-                      key: _listviewKey,
-                      controller: _scrollController,
-                      itemCount: _histories.length,
-                      padding: EdgeInsets.zero,
-                      itemExtent: _listItemHeight,
-                      itemBuilder: (context, index) {
-                        return MouseRegion(
-                          onHover: (event) {
-                            setState(() {
-                              _selectIndex = index;
-                            });
-                          },
-                          child: GestureDetector(
-                            onTap: () {
-                              setClipboardData(_selectIndex);
+              Expanded(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.only(bottom: 25.0, left: 10, right: 10),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                          child: ListView.builder(
+                        key: _listviewKey,
+                        controller: _scrollController,
+                        itemCount: _histories.length,
+                        padding: EdgeInsets.zero,
+                        itemExtent: _listItemHeight,
+                        itemBuilder: (context, index) {
+                          return MouseRegion(
+                            onHover: (event) {
+                              setState(() {
+                                _selectIndex = index;
+                              });
                             },
-                            child: Container(
-                              color: _selectIndex == index
-                                  ? Colors.grey[350]
-                                  : Colors.transparent,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                        left: 10, right: 10),
-                                    child: Image.asset(
-                                      "images/logo.png",
-                                      width: 25,
-                                      height: 25,
+                            child: GestureDetector(
+                              onTap: () {
+                                setClipboardData(_selectIndex);
+                              },
+                              child: Container(
+                                color: _selectIndex == index
+                                    ? Colors.grey[350]
+                                    : Colors.transparent,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 10, right: 10),
+                                      child: Image.asset(
+                                        "images/logo.png",
+                                        width: 25,
+                                        height: 25,
+                                      ),
                                     ),
-                                  ),
-                                  Expanded(
-                                    child: Text(
-                                      _histories[index].content!.trim(),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                    Expanded(
+                                      child: Text(
+                                        _histories[index].content!.trim(),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                        right: 10, left: 10),
-                                    child: _selectIndex == index
-                                        ? const Text("↩︎")
-                                        : index < 9
-                                            ? Text("⌘${index + 1}")
-                                            : Container(),
-                                  )
-                                ],
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          right: 10, left: 10),
+                                      child: _selectIndex == index
+                                          ? const Text("↩︎")
+                                          : index < 9
+                                              ? Text("⌘${index + 1}")
+                                              : Container(),
+                                    )
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    )),
-                    Expanded(
-                        child: Padding(
-                      padding:
-                          const EdgeInsets.only(top: 8.0, left: 15, right: 15),
-                      child: Container(
-                        child: Text(_histories.isNotEmpty
-                            ? _histories.elementAt(_selectIndex).content!
-                            : ""),
-                      ),
-                    ))
-                  ],
+                          );
+                        },
+                      )),
+                      Expanded(
+                          child: Padding(
+                        padding: const EdgeInsets.only(
+                            top: 8.0, left: 15, right: 15),
+                        child: Container(
+                          child: Text(_histories.isNotEmpty
+                              ? _histories.elementAt(_selectIndex).content!
+                              : ""),
+                        ),
+                      ))
+                    ],
+                  ),
                 ),
-              ),
-            )
-          ],
-        ),
-      )),
+              )
+            ],
+          ),
+        )),
+      ),
     );
   }
 
@@ -287,9 +291,7 @@ class _ClipboardPageState extends State<ClipboardPage> {
     if (text != null && text.isNotEmpty) {
       Clipboard.setData(ClipboardData(text: text));
     }
-    Future.delayed(const Duration(milliseconds: 200), () {
-      windowManager.hide();
-    });
+    widget.windowController.close();
   }
 
   void _animateToTargetOffset(double targetOffset) {
