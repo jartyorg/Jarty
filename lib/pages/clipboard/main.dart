@@ -5,10 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:isar/isar.dart';
 import 'package:jarty/models/clipboard_history.dart';
+import 'package:jarty/plugin/floating_window/floating_window.dart';
 import 'package:jarty/plugin/floating_window/window_controller.dart';
 import 'package:jarty/utils/debounce.dart';
 import 'package:jarty/utils/isar_util.dart';
-import 'package:window_manager/window_manager.dart';
 
 class ClipboardPage extends StatefulWidget {
   const ClipboardPage({Key? key, required this.windowController})
@@ -21,70 +21,63 @@ class ClipboardPage extends StatefulWidget {
 }
 
 class _ClipboardPageState extends State<ClipboardPage> {
+  /// clipboard history
   List<ClipboardHistory> _histories = [];
+
+  /// select index tell you which item is selected
   int _selectIndex = 0;
+
+  /// keyBored  listener widget  Focus need
   final FocusNode _keyBordFocusNode = FocusNode();
 
+  /// textField widget  Focus need
+  final FocusNode _inputFocusNode = FocusNode();
+
+  /// textField change event debounce
   final Debounce inputDebounce =
       Debounce(delay: const Duration(milliseconds: 100));
 
+  /// listView controller
   final ScrollController _scrollController = ScrollController();
+
+  /// listView key
   final GlobalKey _listviewKey = GlobalKey();
+
+  /// listView item height
   final double _listItemHeight = 26.0;
 
+  /// listView scroll animation duration
   static const int _animationDuration = 200;
+
+  /// listView  animation curve
   static const Curve _animationCurve = Curves.easeInOut;
 
-  HotKey digit1 = HotKey(
+  /// generate history hot key
+  List<HotKey> hotKeys = [
     KeyCode.digit1,
-    modifiers: [KeyModifier.meta],
-    scope: HotKeyScope.inapp, // Set as inapp-wide hotkey.
-  );
-  HotKey digit2 = HotKey(
     KeyCode.digit2,
-    modifiers: [KeyModifier.meta],
-    scope: HotKeyScope.inapp, // Set as inapp-wide hotkey.
-  );
-  HotKey digit3 = HotKey(
     KeyCode.digit3,
-    modifiers: [KeyModifier.meta],
-    scope: HotKeyScope.inapp, // Set as inapp-wide hotkey.
-  );
-  HotKey digit4 = HotKey(
     KeyCode.digit4,
-    modifiers: [KeyModifier.meta],
-    scope: HotKeyScope.inapp, // Set as inapp-wide hotkey.
-  );
-  HotKey digit5 = HotKey(
     KeyCode.digit5,
-    modifiers: [KeyModifier.meta],
-    scope: HotKeyScope.inapp, // Set as inapp-wide hotkey.
-  );
-  HotKey digit6 = HotKey(
     KeyCode.digit6,
-    modifiers: [KeyModifier.meta],
-    scope: HotKeyScope.inapp, // Set as inapp-wide hotkey.
-  );
-  HotKey digit7 = HotKey(
     KeyCode.digit7,
-    modifiers: [KeyModifier.meta],
-    scope: HotKeyScope.inapp, // Set as inapp-wide hotkey.
-  );
-  HotKey digit8 = HotKey(
     KeyCode.digit8,
-    modifiers: [KeyModifier.meta],
-    scope: HotKeyScope.inapp, // Set as inapp-wide hotkey.
-  );
-  HotKey digit9 = HotKey(
-    KeyCode.digit9,
-    modifiers: [KeyModifier.meta],
-    scope: HotKeyScope.inapp, // Set as inapp-wide hotkey.
-  );
+    KeyCode.digit9
+  ]
+      .map((keyCode) => HotKey(
+            keyCode,
+            modifiers: [KeyModifier.meta],
+            scope: HotKeyScope.inapp, // Set as inapp-wide hotkey.
+          ))
+      .toList();
+
+  /// esc hotkey
+  HotKey escHotkey = HotKey(KeyCode.escape, scope: HotKeyScope.inapp);
 
   @override
   void initState() {
-    _keyBordFocusNode.requestFocus();
     _initHotKey();
+    /// get all clipboard history order by create time desc
     IsarUtil.instance.isar.clipboardHistorys
         .where()
         .sortByCreateTimeDesc()
@@ -95,54 +88,41 @@ class _ClipboardPageState extends State<ClipboardPage> {
     super.initState();
   }
 
-  //
+  /// init all hotkey
   Future<void> _initHotKey() async {
-    // For hot reload, `unregisterAll()` needs to be called.
-    await hotKeyManager.register(digit1, keyDownHandler: (hotKey) {
-      setClipboardData(0);
+    for (var hotKey in hotKeys) {
+      await hotKeyManager.register(hotKey, keyDownHandler: (hk) {
+        setClipboardData(hotKeys.indexOf(hotKey));
+      });
+    }
+
+    await hotKeyManager.register(escHotkey, keyDownHandler: (_) {
+      widget.windowController.close();
     });
-    await hotKeyManager.register(digit2, keyDownHandler: (hotKey) {
-      setClipboardData(1);
-    });
-    await hotKeyManager.register(digit3, keyDownHandler: (hotKey) {
-      setClipboardData(2);
-    });
-    await hotKeyManager.register(digit4, keyDownHandler: (hotKey) {
-      setClipboardData(3);
-    });
-    await hotKeyManager.register(digit5, keyDownHandler: (hotKey) {
-      setClipboardData(4);
-    });
-    await hotKeyManager.register(digit6, keyDownHandler: (hotKey) {
-      setClipboardData(5);
-    });
-    await hotKeyManager.register(digit7, keyDownHandler: (hotKey) {
-      setClipboardData(6);
-    });
-    await hotKeyManager.register(digit8, keyDownHandler: (hotKey) {
-      setClipboardData(7);
-    });
-    await hotKeyManager.register(digit9, keyDownHandler: (hotKey) {
-      setClipboardData(8);
-    });
+  }
+
+  ///unregister  all hotkey
+  Future<void> _unregisterHotKey() async {
+    for (var hotKey in hotKeys) {
+      await hotKeyManager.unregister(hotKey);
+    }
+
+    hotKeyManager.unregister(escHotkey);
   }
 
   @override
   void dispose() {
-    hotKeyManager.unregister(digit1);
-    hotKeyManager.unregister(digit2);
-    hotKeyManager.unregister(digit3);
-    hotKeyManager.unregister(digit4);
-    hotKeyManager.unregister(digit5);
-    hotKeyManager.unregister(digit6);
-    hotKeyManager.unregister(digit7);
-    hotKeyManager.unregister(digit8);
-    hotKeyManager.unregister(digit9);
+    _unregisterHotKey();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _keyBordFocusNode.requestFocus();
+      _inputFocusNode.requestFocus();
+    });
+
     return MaterialApp(
       home: RawKeyboardListener(
         onKey: (event) {
@@ -172,6 +152,7 @@ class _ClipboardPageState extends State<ClipboardPage> {
               Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: TextField(
+                  focusNode: _inputFocusNode,
                   onChanged: (text) {
                     inputDebounce.run(() {
                       IsarUtil.instance.isar.clipboardHistorys
@@ -180,6 +161,7 @@ class _ClipboardPageState extends State<ClipboardPage> {
                           .sortByCreateTimeDesc()
                           .findAll()
                           .then((value) => setState(() {
+                                _selectIndex = 0;
                                 _histories = value;
                               }));
                     });
@@ -286,14 +268,27 @@ class _ClipboardPageState extends State<ClipboardPage> {
     );
   }
 
-  void setClipboardData(index) {
-    String? text = _histories.elementAt(index).content;
-    if (text != null && text.isNotEmpty) {
-      Clipboard.setData(ClipboardData(text: text));
+  /// set clipboard data
+  void setClipboardData(index) async {
+    if (index < _histories.length) {
+      ClipboardHistory history = _histories.elementAt(index);
+      String? text = history.content;
+      if (text != null && text.isNotEmpty) {
+        FloatingWindow.invokeMethod(0, "onClipboardSetData", text);
+        Clipboard.setData(ClipboardData(text: text));
+        await IsarUtil.instance.isar.writeTxn(() async {
+          final needUpdateHistory =
+              await IsarUtil.instance.isar.clipboardHistorys.get(history.id);
+          needUpdateHistory!.createTime = DateTime.now();
+          await IsarUtil.instance.isar.clipboardHistorys
+              .put(needUpdateHistory!); // 修改数据
+        });
+      }
+      widget.windowController.close();
     }
-    widget.windowController.close();
   }
 
+  /// scroll to target position
   void _animateToTargetOffset(double targetOffset) {
     _scrollController.animateTo(
       targetOffset,
@@ -302,6 +297,7 @@ class _ClipboardPageState extends State<ClipboardPage> {
     );
   }
 
+  /// calculate scroll and select
   void _selectListItem(int index) {
     double targetScrollOffset = 0;
 
