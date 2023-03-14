@@ -26,6 +26,10 @@
 		33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F22044A3C60003C045 /* Assets.xcassets */; };
 		33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F42044A3C60003C045 /* MainMenu.xib */; };
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
+		58296BF329BEDF4000B2DD2F /* FloatingWindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58296BF229BEDF4000B2DD2F /* FloatingWindowManager.swift */; };
+		58296BF529BEDFF000B2DD2F /* WindowChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58296BF429BEDFF000B2DD2F /* WindowChannel.swift */; };
+		58296BF729BEE04F00B2DD2F /* FlutterFloatingWindowPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58296BF629BEE04F00B2DD2F /* FlutterFloatingWindowPlugin.swift */; };
+		58296BF929BEE5CC00B2DD2F /* FlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58296BF829BEE5CC00B2DD2F /* FlutterWindow.swift */; };
 		917DEFB55249A821A75D622B /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D3C8FD2955FB844B840961BD /* Pods_Runner.framework */; };
 /* End PBXBuildFile section */
 
@@ -68,6 +72,10 @@
 		33E51914231749380026EE4D /* Release.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = Release.entitlements; sourceTree = "<group>"; };
 		33E5194F232828860026EE4D /* AppInfo.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AppInfo.xcconfig; sourceTree = "<group>"; };
 		52EED59764DED2B39DFBAA0C /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
+		58296BF229BEDF4000B2DD2F /* FloatingWindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingWindowManager.swift; sourceTree = "<group>"; };
+		58296BF429BEDFF000B2DD2F /* WindowChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowChannel.swift; sourceTree = "<group>"; };
+		58296BF629BEE04F00B2DD2F /* FlutterFloatingWindowPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlutterFloatingWindowPlugin.swift; sourceTree = "<group>"; };
+		58296BF829BEE5CC00B2DD2F /* FlutterWindow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlutterWindow.swift; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		D3C8FD2955FB844B840961BD /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -142,12 +150,16 @@
 		33FAB671232836740065AC1E /* Runner */ = {
 			isa = PBXGroup;
 			children = (
+				58296BF829BEE5CC00B2DD2F /* FlutterWindow.swift */,
+				58296BF429BEDFF000B2DD2F /* WindowChannel.swift */,
 				33CC10F02044A3C60003C045 /* AppDelegate.swift */,
 				33CC11122044BFA00003C045 /* MainFlutterWindow.swift */,
 				33E51913231747F40026EE4D /* DebugProfile.entitlements */,
 				33E51914231749380026EE4D /* Release.entitlements */,
 				33CC11242044D66E0003C045 /* Resources */,
 				33BA886A226E78AF003329D5 /* Configs */,
+				58296BF229BEDF4000B2DD2F /* FloatingWindowManager.swift */,
+				58296BF629BEE04F00B2DD2F /* FlutterFloatingWindowPlugin.swift */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -159,7 +171,6 @@
 				E70D5358C4C0AF12FDB609F5 /* Pods-Runner.release.xcconfig */,
 				52EED59764DED2B39DFBAA0C /* Pods-Runner.profile.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -338,8 +349,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				58296BF729BEE04F00B2DD2F /* FlutterFloatingWindowPlugin.swift in Sources */,
+				58296BF529BEDFF000B2DD2F /* WindowChannel.swift in Sources */,
+				58296BF929BEE5CC00B2DD2F /* FlutterWindow.swift in Sources */,
 				33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */,
 				33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */,
+				58296BF329BEDF4000B2DD2F /* FloatingWindowManager.swift in Sources */,
 				335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -422,11 +437,17 @@
 				CODE_SIGN_ENTITLEMENTS = Runner/DebugProfile.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				FLUTTER_BUILD_NAME = "0.0.1-beta1";
+				FLUTTER_BUILD_NUMBER = 1;
 				INFOPLIST_FILE = Runner/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Jarty;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MARKETING_VERSION = "0.0.1-beta1";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 			};
@@ -548,11 +569,17 @@
 				CODE_SIGN_ENTITLEMENTS = Runner/DebugProfile.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				FLUTTER_BUILD_NAME = "0.0.1-beta1";
+				FLUTTER_BUILD_NUMBER = 1;
 				INFOPLIST_FILE = Runner/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Jarty;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MARKETING_VERSION = "0.0.1-beta1";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -568,11 +595,17 @@
 				CODE_SIGN_ENTITLEMENTS = Runner/Release.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				FLUTTER_BUILD_NAME = "0.0.1-beta1";
+				FLUTTER_BUILD_NUMBER = 1;
 				INFOPLIST_FILE = Runner/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Jarty;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MARKETING_VERSION = "0.0.1-beta1";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 			};

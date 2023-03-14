@@ -6,20 +6,29 @@ import 'package:flutter/services.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:jarty/models/clipboard_history.dart';
 import 'package:jarty/pages/clipboard/main.dart';
-import 'package:jarty/utils/isarUtil.dart';
+import 'package:jarty/pages/home/main.dart';
+import 'package:jarty/plugin/floating_window/floating_window.dart';
+import 'package:jarty/plugin/floating_window/window_controller.dart';
+import 'package:jarty/utils/isar_util.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
 
-void main() async {
-  await _initWindowsManger();
-  await _initHotKey();
-  await _initTray();
+void main(List<String> args) async {
+  WidgetsFlutterBinding.ensureInitialized();
   await IsarUtil.instance.init();
-  runApp(const MyApp());
+  if (args.isNotEmpty && args.first == "floating_window") {
+    final windowId = int.parse(args[1]);
+    runApp(ClipboardPage(
+        windowController: WindowController.fromWindowId(windowId)));
+  } else {
+    await _initHotKey();
+    await _initWindowsManger();
+    await _initTray();
+    runApp(const MyApp());
+  }
 }
 
 Future<void> _initWindowsManger() async {
-  WidgetsFlutterBinding.ensureInitialized();
   // Must add this line.
   await windowManager.ensureInitialized();
 
@@ -41,12 +50,12 @@ Future<void> _initTray() async {
     Platform.isWindows ? 'images/logo.ico' : 'images/logo.png',
   );
   List<MenuItem> items = [
-    MenuItem(
-      label: 'show_window',
-    ),
     MenuItem.separator(),
     MenuItem(
-      label: 'exit_app',
+      label: 'Quit',
+      onClick: (MenuItem menuItem){
+        SystemNavigator.pop();
+      }
     ),
   ];
   await trayManager.setContextMenu(Menu(items: items));
@@ -65,8 +74,13 @@ Future<void> _initHotKey() async {
   await hotKeyManager.register(
     clipboardHistoryKey,
     keyDownHandler: (hotKey) async {
-      await windowManager.show();
-      await windowManager.focus();
+      final window = await FloatingWindow.createWindow();
+      window
+        ..setFrame(const Offset(0, 0) & const Size(633, 463))
+        ..center()
+        ..show();
+      // await windowManager.show();
+      // await windowManager.focus();
     },
     // Only works on macOS.
     keyUpHandler: (hotKey) {},
@@ -80,7 +94,10 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> with ClipboardListener, TrayListener ,WindowListener{
+class _MyAppState extends State<MyApp>
+    with ClipboardListener, TrayListener, WindowListener {
+  String jartyClipboardSetData = "";
+
   @override
   void initState() {
     // TODO: implement initState
@@ -89,8 +106,21 @@ class _MyAppState extends State<MyApp> with ClipboardListener, TrayListener ,Win
     clipboardWatcher.addListener(this);
     // start watch
     clipboardWatcher.start();
-
+    FloatingWindow.setMethodHandler(_handleMethodCallback);
     super.initState();
+  }
+
+  Future<dynamic> _handleMethodCallback(MethodCall call,
+      int fromWindowId) async {
+    if (call.arguments.toString() == "ping") {
+      return "pong";
+    }
+
+    if (call.method == "onClipboardSetData") {
+      setState(() {
+        jartyClipboardSetData = call.arguments.toString();
+      });
+    }
   }
 
   @override
@@ -99,6 +129,7 @@ class _MyAppState extends State<MyApp> with ClipboardListener, TrayListener ,Win
     trayManager.removeListener(this);
     clipboardWatcher.stop();
     clipboardWatcher.removeListener(this);
+    FloatingWindow.setMethodHandler(null);
     super.dispose();
   }
 
@@ -108,31 +139,31 @@ class _MyAppState extends State<MyApp> with ClipboardListener, TrayListener ,Win
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const ClipboardPage(),
+      home: const MyHomePage(
+        title: "1111",
+      ),
     );
   }
 
   @override
   void onClipboardChanged() async {
     ClipboardData? newClipboardData =
-        await Clipboard.getData(Clipboard.kTextPlain);
+    await Clipboard.getData(Clipboard.kTextPlain);
+
+    if (newClipboardData?.text?.trim() == jartyClipboardSetData) {
+      setState(() {
+        jartyClipboardSetData = "";
+      });
+      return;
+    }
 
     if (newClipboardData != null &&
         newClipboardData.text != null &&
         newClipboardData.text!.trim() != "") {
       final history = ClipboardHistory()
-        ..content = newClipboardData!.text
+        ..content = newClipboardData!.text!.trim()
         ..createTime = DateTime.now();
       await IsarUtil.instance.isar.writeTxn(() async {
         await IsarUtil.instance.isar.clipboardHistorys
@@ -151,4 +182,6 @@ class _MyAppState extends State<MyApp> with ClipboardListener, TrayListener ,Win
     // do something, for example pop up the menu
     trayManager.popUpContextMenu();
   }
+
+
 }

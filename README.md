@@ -1,16 +1,38 @@
-# jarty
+# Jarty
 
 Open source projects like Alfred
 
-## Getting Started
 
-This project is a starting point for a Flutter application.
+## Features
 
-A few resources to get you started if this is your first Flutter project:
+- [x] clipboard history
+- [ ] software and file search
+- [ ] plugin market
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Usage
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### clipboard history
+
+Use the `option+command+c` shortcut to open the clipboard history
+
+
+
+## Contributing
+
+1. Fork this repository
+2. Create a new branch (`git checkout -b feature/new-feature`)
+3. Make changes and commit (`git commit -am 'Add new feature'`)
+4. Push to the branch (`git push origin feature/new-feature`)
+5. Create a new Pull Request
+
+## License
+
+This software uses the MIT license. See LICENSE.md for more information.
+
+## Contact
+
+If you have any questions or feedback, please contact us via email (kayshen_xu@163.com). You can also open an issue on our GitHub page.
+
+
+
+
